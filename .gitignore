@@ -1,0 +1,12 @@
+.*
+!.gitignore
+*.log
+*.pot
+*.pyc
+venv/
+logs/
+db.sqlite3
+__pycache__
+build/
+dist/
+*.egg-info
