@@ -3,7 +3,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.db import transaction
 from qx_base.qx_core.tools import DictInstance
-from qx_base.qx_user.tools import CodeMsg
+from qx_base.qx_user.tools import CodeMsg, generate_random_account
 from qx_base.qx_user.serializers import SignupSerializer
 from qx_base.qx_rest.exceptions import SerializerFieldError
 from .settings import platform_auth_settings
@@ -65,6 +65,12 @@ class SigninSerializer(serializers.Serializer):
 
 class PlatformSignupSerializer(SignupSerializer):
 
+    account = serializers.CharField(
+        label="账号", max_length=20, required=False,)
+    mobile = serializers.CharField(
+        label="手机号", max_length=20, required=False)
+    email = serializers.CharField(
+        label="邮箱", max_length=50, required=False)
     openid = serializers.CharField(
         label="Openid", required=False)
     platform = serializers.ChoiceField(
@@ -87,6 +93,7 @@ class PlatformSignupSerializer(SignupSerializer):
 
     def create(self, validated_data):
         code = validated_data.pop('code', None)
+        account = validated_data.pop('account', None)
         mobile = validated_data.pop('mobile', None)
         email = validated_data.pop('email', None)
         password = validated_data.pop('password', None)
@@ -118,10 +125,13 @@ class PlatformSignupSerializer(SignupSerializer):
             raise SerializerFieldError(
                 '验证码错误', field='code')
 
+        if not account:
+            account = generate_random_account()
+
         # creaste user
         with transaction.atomic():
             instance = self._create_user(
-                mobile, email, password, userinfo)
+                account, mobile, email, password, userinfo)
             if platform_ins:
                 platform_ins.user_id = instance.id
                 platform_ins.save()

@@ -1,7 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from qx_base.qx_user.models import QxUser, QxUser_Meta, QxUserInfo
-from qx_base.qx_rest.models import RestCacheModel
 from qx_platform_auth.models import PlatformAuth, PlatformAuth_Meta
 
 
@@ -13,7 +12,7 @@ class User(AbstractBaseUser, QxUser):
     Meta = QxUser_Meta
 
 
-class UserInfo(QxUserInfo, RestCacheModel):
+class UserInfo(QxUserInfo):
     """
     User info
     """
@@ -28,7 +27,7 @@ class UserInfo(QxUserInfo, RestCacheModel):
         verbose_name_plural = verbose_name
 
 
-class UserPlatform(PlatformAuth, RestCacheModel):
+class UserPlatform(PlatformAuth):
     """
     User Platform
     """

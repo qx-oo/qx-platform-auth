@@ -1,6 +1,6 @@
 from django.db import models
-from django.utils import timezone
 from django.contrib.postgres.fields import JSONField
+from qx_base.qx_rest.models import RestModel
 
 
 class PlatformAuth_Meta:
@@ -9,7 +9,7 @@ class PlatformAuth_Meta:
     unique_together = (('platform', 'user_id'), ('platform', 'openid'))
 
 
-class PlatformAuth(models.Model):
+class PlatformAuth(RestModel):
     '''
     Platform user auth
     '''
@@ -20,8 +20,6 @@ class PlatformAuth(models.Model):
         verbose_name='Openid', max_length=50, unique=True)
     user_id = models.IntegerField(
         verbose_name="用户Id", null=True, blank=True, db_index=True)
-    created = models.DateTimeField(
-        verbose_name='创建时间', default=timezone.now, editable=False)
     extra_info = JSONField(
         verbose_name="信息", default=dict)
 

@@ -37,6 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'qx_base.qx_core',
+    'qx_base.qx_rest',
+    'qx_base.qx_user',
+    'qx_platform_auth',
+    'qx_test.user',
 ]
 
 MIDDLEWARE = [
@@ -75,8 +80,12 @@ WSGI_APPLICATION = 'qx_test.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'qx_test',
+        'USER': 'postgres',
+        'PASSWORD': '1234',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
 
@@ -118,3 +127,42 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
 
 STATIC_URL = '/static/'
+
+# RestFramework
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'qx_base.qx_user.auth.JwtAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
+    'DEFAULT_PARSER_CLASSES': [
+        'rest_framework.parsers.JSONParser',
+    ],
+    'DEFAULT_PAGINATION_CLASS':
+        'qx_base.qx_rest.paginations.Pagination',
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework.filters.OrderingFilter',
+        'rest_framework.filters.SearchFilter',
+    ),
+    'EXCEPTION_HANDLER': 'qx_base.qx_rest.handlers.rest_exception_handler',
+    'PAGE_SIZE': 15,
+}
+
+REDIS_HOST = "127.0.0.1"
+REDIS_PORT = 6379
+REDIS_PASSWORD = ""
+REDIS_URL = "redis://:{}@{}:{}".format(
+    REDIS_PASSWORD,
+    REDIS_HOST,
+    REDIS_PORT)
+
+PLATFORM_AUTH_SETTINGS = {
+    "APPLE_KEY_ID": 'test',
+    "APPLE_TEAM_ID": 'test',
+    "APPLE_CLIENT_ID": 'test',
+    "APPLE_CLIENT_SECRET": 'test',
+    "APPLE_REDIRECT_URI": 'test',
+    "PLATFORM_MODEL_CLASS": 'qx_test.',
+}
