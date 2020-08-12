@@ -2,7 +2,8 @@ import requests
 import logging
 import json
 import jwt
-from django.utils import timezone
+import time
+from qx_base.qx_core.storage import ProxyCache
 from .settings import platform_auth_settings
 
 
@@ -15,8 +16,7 @@ class WeiboAuth():
     """
 
     def auth(self, openid, access_token):
-        result = requests.request(
-            "POST",
+        result = requests.post(
             "https://api.weibo.com/oauth2/get_token_info",
             params={'access_token': access_token},
             timeout=20)
@@ -37,8 +37,7 @@ class WechatAuth():
     """
 
     def auth(self, openid, access_token):
-        result = requests.request(
-            "GET",
+        result = requests.get(
             "https://api.weixin.qq.com/sns/auth",
             params={'access_token': access_token,
                     "openid": openid},
@@ -60,8 +59,7 @@ class FacebookAuth():
     """
 
     def auth(self, openid, access_token):
-        result = requests.request(
-            "GET",
+        result = requests.get(
             "https://graph.facebook.com/me",
             params={'access_token': access_token, "fields": 'id'},
             timeout=20)
@@ -82,8 +80,7 @@ class GoogleAuth():
     """
 
     def auth(self, openid, access_token):
-        result = requests.request(
-            "GET",
+        result = requests.get(
             "https://www.googleapis.com/oauth2/v3/tokeninfo",
             params={'id_token': access_token},
             timeout=20)
@@ -138,25 +135,26 @@ class AppleAuth():
 
     def get_key_and_secret(self):
         headers = {
-            'kid': platform_auth_settings.APPLE_KEY_ID
+            'kid': platform_auth_settings.APPLE_AUTH['APPLE_KEY_ID']
         }
 
         payload = {
-            'iss': platform_auth_settings.APPLE_TEAM_ID,
-            'iat': timezone.now(),
-            'exp': timezone.now() + timezone.timedelta(days=180),
+            'iss': platform_auth_settings.APPLE_AUTH['APPLE_TEAM_ID'],
+            'iat': int(time.time()),
+            'exp': int(time.time()) + 60 * 60 * 24 * 180,
             'aud': 'https://appleid.apple.com',
-            'sub': platform_auth_settings.APPLE_CLIENT_ID,
+            'sub': platform_auth_settings.APPLE_AUTH['APPLE_CLIENT_ID'],
         }
 
         client_secret = jwt.encode(
             payload,
-            platform_auth_settings.APPLE_CLIENT_SECRET,
+            platform_auth_settings.APPLE_AUTH['APPLE_CLIENT_SECRET'],
             algorithm='ES256',
-            headers=headers
-        ).decode("utf-8")
+            headers=headers,
+        ).decode()
 
-        return platform_auth_settings.APPLE_CLIENT_ID, client_secret
+        return platform_auth_settings.APPLE_AUTH['APPLE_CLIENT_ID'],\
+            client_secret
 
     def get_user_details(self, response):
         email = response.get('email', None)
@@ -178,17 +176,22 @@ APP_PLATFORM_MAP = {
 class AppPlatform():
 
     def __init__(self):
-        pass
+        self.cache_key = "qx_platform_auth:{}:{}"
 
     def auth(self, platform, openid, access_token):
+        proxy = ProxyCache(self.cache_key, 60 * 5, args=[platform, openid])
+        if data := proxy.get():
+            return True, data
         try:
-
             app_cls = APP_PLATFORM_MAP.get(platform)
             if not app_cls:
                 return False, {
                     "error_msg": "Platform {} error".format(platform)
                 }
-            return app_cls().auth(openid, access_token)
+            status, data = app_cls().auth(openid, access_token)
+            if status:
+                proxy.set(data)
+            return status, data
 
         except requests.exceptions.ConnectTimeout:
             return False, {

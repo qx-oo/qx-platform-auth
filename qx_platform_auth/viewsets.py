@@ -17,9 +17,9 @@ from .serializers import (
 
 class UserPermission(BaseUserPermission):
     def has_permission(self, request, view):
-        if view.action in ['signin', 'signup', 'send_code', 'signin_platform']:
+        if view.action in ['signin_platform']:
             return AllowAny().has_permission(request, view)
-        return IsAuthenticated().has_permission(request, view)
+        return super().has_permission(request, view)
 
 
 class UserViewSet(BaseUserViewSet):
@@ -30,6 +30,11 @@ class UserViewSet(BaseUserViewSet):
         三方平台登录
 
         三方平台登录
+
+    signup_platform:
+        三方平台注册
+
+        三方平台注册
     """.format(BaseUserViewSet.__doc__)
 
     permission_classes = (
@@ -46,6 +51,11 @@ class UserViewSet(BaseUserViewSet):
     @decorators.action(methods=['post'], url_path='signin-platform',
                        detail=False)
     def signin_platform(self, request, *args, **kwargs):
+        return ApiResponse(data=self._create(request, *args, **kwargs))
+
+    @decorators.action(methods=['post'], url_path='signup-platform',
+                       detail=False)
+    def signup_platform(self, request, *args, **kwargs):
         return ApiResponse(data=self._create(request, *args, **kwargs))
 
 

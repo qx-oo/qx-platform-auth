@@ -11,11 +11,8 @@ setup(
     long_description=open("README.md").read(),
     packages=find_packages(exclude=["qx_test"]),
     install_requires=[
-        'Django >= 3.0',
-        'djangorestframework >= 3.11.0',
-        # 'djangorestframework-jwt >= 1.11.0',
-        # 'PyCryptodome >= 3.9.8',
-        # 'redis >= 3.5.3',
+        'requests>=2.24',
+        'cryptography>=2.9',
     ],
     python_requires='>=3.8',
     platforms='any',

@@ -158,11 +158,22 @@ REDIS_URL = "redis://:{}@{}:{}".format(
     REDIS_HOST,
     REDIS_PORT)
 
-PLATFORM_AUTH_SETTINGS = {
-    "APPLE_KEY_ID": 'test',
-    "APPLE_TEAM_ID": 'test',
-    "APPLE_CLIENT_ID": 'test',
-    "APPLE_CLIENT_SECRET": 'test',
-    "APPLE_REDIRECT_URI": 'test',
-    "PLATFORM_MODEL_CLASS": 'qx_test.',
+AUTH_USER_MODEL = 'user.User'
+
+QX_BASE_SETTINGS = QX_BASE_SETTINGS = {
+    'SEND_MOBILE_MSG_CLASS': 'qx_test.msg.TestMsg',
+    'SEND_EMAIL_MSG_CLASS': 'qx_test.msg.TestMsg',
+    'USERINFO_MODEL': "user.UserInfo",
+    'USERINFO_SERIALIZER_CLASS': "qx_test.user.serializers.UserinfoSerializer",  # noqa
+}
+
+PLATFORM_AUTH_APPLE_SETTINGS = {
+    "APPLE_AUTH": {
+        "APPLE_KEY_ID": 'test',
+        "APPLE_TEAM_ID": 'test',
+        "APPLE_CLIENT_ID": 'test',
+        "APPLE_CLIENT_SECRET": '-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugdUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQsHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5Do2kQ+X5xK9cipRgEKwIDAQAB-----END PUBLIC KEY-----',  # noqa
+        "APPLE_REDIRECT_URI": 'test',
+    },
+    "PLATFORM_AUTH_MODEL": 'user.UserPlatform'
 }
