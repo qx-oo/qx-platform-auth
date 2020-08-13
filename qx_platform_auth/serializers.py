@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model, authenticate
-from django.db.models import Q
+from django.contrib.auth import get_user_model
 from django.db import transaction
 from qx_base.qx_core.tools import DictInstance
 from qx_base.qx_user.tools import CodeMsg, generate_random_account

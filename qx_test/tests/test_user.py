@@ -85,10 +85,27 @@ class TestUserViewSet:
         assert data['data']['token']
 
 
-# class TestPlatformViewSet:
+class TestPlatformViewSet:
 
-#     def test_bind(self):
-#         pass
+    def setup_class(self):
+        self.url = "/api/tests/"
+        self.viewset = PlatformViewSet
+
+    def test_bind(self):
+        url = '{}/user/signin-platform/'.format(self.url)
+
+        req_data = {
+            'openid': 'test_openid',
+            'access_token': 'test_token',
+            'platform': 'wechat',
+        }
+        mocker.patch(
+            "qx_platform_auth.socialapps.requests.get",
+            return_value=DictInstance(text=json.dumps({"errcode": 0})))
+        request = rf.post(
+            url, data=req_data,
+            content_type='application/json')
+        response = self.viewset.as_view({'post': 'signin_platform'})(request)
 
     # @pytest.mark.django_db
     # def test_signin(self, rf, user_data_init):
