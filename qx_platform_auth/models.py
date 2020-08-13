@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.postgres.fields import JSONField
 from qx_base.qx_rest.models import RestModel
 
 
@@ -19,7 +20,7 @@ class PlatformAuth(RestModel):
         verbose_name='Openid', max_length=50, unique=True)
     user_id = models.IntegerField(
         verbose_name="用户Id", null=True, blank=True, db_index=True)
-    extra_info = models.JSONField(
+    extra_info = JSONField(
         verbose_name="信息", default=dict)
 
     class Meta:

@@ -160,6 +160,8 @@ REDIS_URL = "redis://:{}@{}:{}".format(
 
 AUTH_USER_MODEL = 'user.User'
 
+JWT_TOKEN_KEYWORD = 'token'
+
 QX_BASE_SETTINGS = QX_BASE_SETTINGS = {
     'SEND_MOBILE_MSG_CLASS': 'qx_test.msg.TestMsg',
     'SEND_EMAIL_MSG_CLASS': 'qx_test.msg.TestMsg',

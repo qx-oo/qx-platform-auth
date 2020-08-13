@@ -8,6 +8,10 @@ my django project thirdparty platform auth
 
 ### Usage:
 
+depends:
+
+    qx-base >= 1.0.7
+
 settings.py:
 
     INSTALLED_APPS = [

@@ -63,7 +63,7 @@ class TestUserViewSet:
 
         req_data = {
             "openid": "test_openid",
-            "mobile": '18866668800',
+            "mobile": '18866668000',
             "password": "12345678",
             'platform': 'wechat',
             "userinfo": {
@@ -82,8 +82,7 @@ class TestUserViewSet:
         response = self.viewset.as_view({'post': 'signup_platform'})(request)
         assert response.status_code == 200
         data = json.loads(response.content)
-        breakpoint()
-        # assert not data['data']['is_register']
+        assert data['data']['token']
 
 
 # class TestPlatformViewSet:

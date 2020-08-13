@@ -14,7 +14,7 @@ User = get_user_model()
 platform_model = platform_auth_settings.PLATFORM_AUTH_MODEL
 
 
-class SigninSerializer(serializers.Serializer):
+class PlatformSigninSerializer(serializers.Serializer):
 
     openid = serializers.CharField(
         label="Openid", max_length=250)
@@ -66,9 +66,10 @@ class SigninSerializer(serializers.Serializer):
 class PlatformSignupSerializer(SignupSerializer):
 
     openid = serializers.CharField(
-        label="Openid")
+        label="Openid", write_only=True)
     platform = serializers.ChoiceField(
-        label="Platform", choices=list(APP_PLATFORM_MAP.items()))
+        label="Platform", choices=list(APP_PLATFORM_MAP.items()),
+        write_only=True)
 
     # def _check_user_exists(self, email, mobile, openid):
     #     account = email or mobile or openid
@@ -109,7 +110,7 @@ class PlatformSignupSerializer(SignupSerializer):
                 platform=platform).first()
             if platform_ins.user_id:
                 raise SerializerFieldError(
-                    'user exists', field='openid')
+                    '已绑定用户', field='openid')
             if not platform_ins:
                 raise SerializerFieldError(
                     'openid error', field='openid')
@@ -117,14 +118,10 @@ class PlatformSignupSerializer(SignupSerializer):
         else:
             object_id = email or mobile
 
-        user = User.query_user(account, email, mobile)
+        user, field = User.query_user(account, email, mobile)
         if user:
-            if password:
-                auth_user = authenticate(
-                    account=user.account, password=password)
-                if not auth_user:
-                    raise SerializerFieldError(
-                        '密码错误', field='password')
+            raise SerializerFieldError('用户已存在', field=field)
+
         if code:
             _code = CodeMsg(
                 object_id, _type='signup').get_code()

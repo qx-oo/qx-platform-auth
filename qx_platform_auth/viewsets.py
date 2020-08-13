@@ -7,7 +7,7 @@ from qx_base.qx_user.viewsets import UserPermission as BaseUserPermission
 from qx_base.qx_rest.response import ApiResponse
 from qx_base.qx_rest import mixins
 from .serializers import (
-    SigninSerializer,
+    PlatformSigninSerializer,
     PlatformSignupSerializer,
     BindPlatformSerializer,
     PlatformSerializer,
@@ -17,7 +17,7 @@ from .serializers import (
 
 class UserPermission(BaseUserPermission):
     def has_permission(self, request, view):
-        if view.action in ['signin_platform']:
+        if view.action in ['signin_platform', 'signup_platform']:
             return AllowAny().has_permission(request, view)
         return super().has_permission(request, view)
 
@@ -43,8 +43,8 @@ class UserViewSet(BaseUserViewSet):
 
     def get_serializer_class(self):
         if self.action == 'signin_platform':
-            return SigninSerializer
-        elif self.action == 'signup':
+            return PlatformSigninSerializer
+        elif self.action == 'signup_platform':
             return PlatformSignupSerializer
         return super().get_serializer_class()
 
