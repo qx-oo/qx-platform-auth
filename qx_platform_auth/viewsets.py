@@ -60,7 +60,8 @@ class UserViewSet(BaseUserViewSet):
 
 
 class PlatformViewSet(viewsets.GenericViewSet,
-                      mixins.ListModelMixin,):
+                      mixins.ListModelMixin,
+                      mixins.CreateModelMixin,):
     """
     用户平台认证
     ---
@@ -100,7 +101,7 @@ class PlatformViewSet(viewsets.GenericViewSet,
 
     def get_queryset(self):
         if self.request.user.is_authenticated:
-            return self.queryset.filter(user=self.request.user)
+            return self.queryset.filter(user_id=self.request.user.id)
         return self.queryset
 
     def destroy(self, request, *args, **kwargs):

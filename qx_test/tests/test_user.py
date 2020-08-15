@@ -91,85 +91,40 @@ class TestPlatformViewSet:
         self.url = "/api/tests/"
         self.viewset = PlatformViewSet
 
-    def test_bind(self):
+    def test_bind(self, mocker, signin_request):
         url = '{}/user/signin-platform/'.format(self.url)
+
+        url = '{}/platform/'.format(self.url)
 
         req_data = {
             'openid': 'test_openid',
             'access_token': 'test_token',
             'platform': 'wechat',
         }
+
         mocker.patch(
             "qx_platform_auth.socialapps.requests.get",
             return_value=DictInstance(text=json.dumps({"errcode": 0})))
-        request = rf.post(
-            url, data=req_data,
-            content_type='application/json')
-        response = self.viewset.as_view({'post': 'signin_platform'})(request)
+        request = signin_request(url, 'post', data=req_data)
 
-    # @pytest.mark.django_db
-    # def test_signin(self, rf, user_data_init):
-    #     url = '{}/user/signin/'.format(self.url)
+        response = self.viewset.as_view({'post': 'create'})(request)
+        data = json.loads(response.content)
+        assert data['data']['id']
 
-    #     data = {
-    #         "account": "18866668888",
-    #         "password": "12345678"
-    #     }
-    #     request = rf.post(
-    #         url, data=data,
-    #         content_type='application/json')
-    #     response = self.viewset.as_view({'post': 'signin'})(request)
-    #     assert response.status_code == 200
-    #     data = json.loads(response.content)
-    #     assert data['data']['token']
+        request = signin_request(url, 'get')
 
-    #     _, code = CodeMsg('18866668888',
-    #                       _type='signin').get_new_code()
-    #     data = {
-    #         "account": "18866668888",
-    #         "code": code
-    #     }
-    #     request = rf.post(
-    #         url, data=data,
-    #         content_type='application/json')
-    #     response = self.viewset.as_view({'post': 'signin'})(request)
-    #     assert response.status_code == 200
-    #     data = json.loads(response.content)
-    #     assert data['data']['token']
+        response = self.viewset.as_view({'get': 'list'})(request)
+        data = json.loads(response.content)
+        assert data['data'][0]
 
-    # @pytest.mark.django_db
-    # def test_signup(self, rf, user_data_init):
-    #     mobile = '18866668800'
-    #     _, code = CodeMsg(mobile,
-    #                       _type='signup').get_new_code()
+        del_url = '{}/platform/{}/'.format(self.url, data['data'][0]['id'])
+        request = signin_request(del_url, 'delete')
+        response = self.viewset.as_view({'delete': 'destroy'})(
+            request, pk=data['data'][0]['id'])
+        data = json.loads(response.content)
+        assert data['code'] == 200
 
-    #     url = '{}/user/signup/'.format(self.url)
-
-    #     data = {
-    #         "mobile": mobile,
-    #         "password": "12345678",
-    #         "code": code,
-    #         "userinfo": {
-    #             "name": "test_user",
-    #             "age": 15,
-    #         }
-    #     }
-    #     request = rf.post(
-    #         url, data=data,
-    #         content_type='application/json')
-    #     response = self.viewset.as_view({'post': 'signup'})(request)
-    #     assert response.status_code == 200
-    #     data = json.loads(response.content)
-    #     assert data['data']['token']
-
-    # @pytest.mark.django_db
-    # def test_account_exists(self, rf, user_data_init):
-
-    #     url = '{}/user/account-exists/?account={}'.format(
-    #         self.url, '18866668880')
-
-    #     request = rf.get(url)
-    #     response = self.viewset.as_view({'get': 'account_exists'})(request)
-    #     assert response.status_code == 200
-    #     data = json.loads(response.content)
-    #     assert data['data']['exists']
+        request = signin_request(url, 'get')
+        response = self.viewset.as_view({'get': 'list'})(request)
+        data = json.loads(response.content)
+        assert len(data['data']) == 0

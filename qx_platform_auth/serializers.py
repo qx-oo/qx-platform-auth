@@ -143,6 +143,8 @@ class PlatformSignupSerializer(SignupSerializer):
 
 class BindPlatformSerializer(serializers.Serializer):
 
+    id = serializers.IntegerField(
+        label="Id", read_only=True)
     openid = serializers.CharField(
         label="Openid", max_length=250)
     access_token = serializers.CharField(
@@ -161,7 +163,7 @@ class BindPlatformSerializer(serializers.Serializer):
 
         instance.user_id = self.context['request'].user.id
         instance.save()
-        return instance
+        return DictInstance(id=instance.id, **validated_data)
 
 
 class PlatformSerializer(serializers.ModelSerializer):

@@ -31,10 +31,12 @@ def signin_request(rf, user_data_init):
     """
     带认证信息的request
     """
-    user = User.objects.get(mobile="18866668888")
-    token = user.get_new_token()
-
-    def _func(url, method='get', data=None):
+    def _func(url, method='get', data=None, user_id=None):
+        if user_id:
+            user = User.objects.get(id=user_id)
+        else:
+            user = User.objects.get(mobile="18866668888")
+        token = user.get_new_token()
         request = getattr(rf, method)(
             url, data=data,
             # HTTP_MYAUTHORIZATION="token %s" % token,

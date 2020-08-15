@@ -23,5 +23,18 @@ class PlatformAuth(RestModel):
     extra_info = JSONField(
         verbose_name="信息", default=dict)
 
+    REST_CACHE_CLASS = {
+        "default": {
+            "PlatformViewSet": {
+                "list_action": [
+                    "list"
+                ],
+                "field_only": True,
+                "field_name": "user_id"
+            }
+        },
+        "reload_data": True,
+    }
+
     class Meta:
         abstract = True
