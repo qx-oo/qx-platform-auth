@@ -169,7 +169,7 @@ QX_BASE_SETTINGS = QX_BASE_SETTINGS = {
     'USERINFO_SERIALIZER_CLASS': "qx_test.user.serializers.UserinfoSerializer",  # noqa
 }
 
-PLATFORM_AUTH_APPLE_SETTINGS = {
+QX_PLATFORM_AUTH_SETTINGS = {
     "APPLE_AUTH": {
         "APPLE_KEY_ID": 'test',
         "APPLE_TEAM_ID": 'test',
