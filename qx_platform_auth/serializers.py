@@ -4,13 +4,16 @@ from django.db import transaction
 from qx_base.qx_core.tools import DictInstance
 from qx_base.qx_user.tools import CodeMsg, generate_random_account
 from qx_base.qx_user.serializers import SignupSerializer
+from qx_base.qx_rest.serializers import SafeJSONField
 from qx_base.qx_rest.exceptions import SerializerFieldError
 from .settings import platform_auth_settings
 from .socialapps import APP_PLATFORM_MAP, AppPlatform
+from .minapps import MiniAppDataDecrypt
 
 
 User = get_user_model()
 platform_model = platform_auth_settings.PLATFORM_AUTH_MODEL
+miniapp_map = platform_auth_settings.MINIAPP_AUTH
 
 
 class PlatformSigninSerializer(serializers.Serializer):
@@ -69,21 +72,6 @@ class PlatformSignupSerializer(SignupSerializer):
     platform = serializers.ChoiceField(
         label="Platform", choices=list(APP_PLATFORM_MAP.items()),
         write_only=True)
-
-    # def _check_user_exists(self, email, mobile, openid):
-    #     account = email or mobile or openid
-    #     if User.objects.filter(
-    #             Q(email=account) | Q(mobile=account) | Q(account=account)
-    #     ).exists():
-    #         if email:
-    #             raise SerializerFieldError(
-    #                 '用户已存在', field='email')
-    #         elif mobile:
-    #             raise SerializerFieldError(
-    #                 '用户已存在', field='mobile')
-    #         else:
-    #             raise SerializerFieldError(
-    #                 '用户已存在', field='openid')
 
     def create(self, validated_data):
         account = validated_data.pop('account', None)
@@ -171,3 +159,48 @@ class PlatformSerializer(serializers.ModelSerializer):
     class Meta:
         model = platform_model
         fields = ('id', 'openid', 'platform', 'created',)
+
+
+class MiniAppSigninSerializer(serializers.Serializer):
+
+    platform = serializers.ChoiceField(
+        label="Platform", choices=list(APP_PLATFORM_MAP.items()))
+    encrypted_info = SafeJSONField(
+        include_fields=['code', 'encrypted_data', 'iv'],
+        max_json_length=5000,
+        label="加密数据, wechat: {'iv': 123, 'encrypted_data': xxx}",
+        write_only=True, required=False)
+
+    def _decrypt(self):
+        MiniAppDataDecrypt().decrypt()
+
+    def create(self, validated_data):
+        status, ret = AppPlatform().auth(**validated_data)
+        if not status:
+            raise serializers.ValidationError(ret['error_msg'])
+        instance, _ = platform_model.objects.get_or_create(
+            openid=validated_data['openid'],
+            platform=validated_data['platform'],
+            defaults={"extra_info": ret})
+        user = None
+        if instance.user_id:
+            user = User.objects.filter(id=instance.user_id).first()
+        if not user:
+            is_send, code = CodeMsg(
+                validated_data['openid'], _type="signup").get_new_code()
+            return DictInstance(
+                **validated_data, **{
+                    "is_register": False,
+                    "token": None,
+                    "extra_info": ret,
+                    "code": code,
+                })
+        else:
+            token = user.get_new_token()
+            return DictInstance(
+                **validated_data, **{
+                    "is_register": True,
+                    "token": token,
+                    "extra_info": ret,
+                    "code": None,
+                })

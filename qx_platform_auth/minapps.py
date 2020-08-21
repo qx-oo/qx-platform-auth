@@ -1,40 +1,83 @@
 import json
+import base64
 import logging
 import requests
 import urllib
+from Crypto.Cipher import AES
 from django.conf import settings
 from qx_base.qx_core.storage import RedisClient
 
 logger = logging.getLogger(__name__)
 
 
-class MinAppMixin():
+class MiniAppDataDecrypt:
+    """
+    MiniApp decrypt data
+    ---
+        MiniAppDataDecrypt(appid, session_key).decrypt(data, iv)
+    """
+
+    def __init__(self, appid, session_key):
+        self.appId = appid
+        self.session_key = session_key
+
+    def decrypt(self, encryptedData, iv):
+        session_key = base64.b64decode(self.session_key)
+        encryptedData = base64.b64decode(encryptedData)
+        iv = base64.b64decode(iv)
+
+        cipher = AES.new(session_key, AES.MODE_CBC, iv)
+
+        decrypted = json.loads(self._unpad(cipher.decrypt(encryptedData)))
+
+        if decrypted['watermark']['appid'] != self.appid:
+            raise Exception('Invalid Buffer')
+
+        return decrypted
+
+    def _unpad(self, s):
+        return s[:-ord(s[len(s)-1:])]
+
+
+class MiniAppMixin():
     """
     Mini App
     ---
     """
 
+    @property
+    def platform(self):
+        raise NotImplementedError
+
     def get_user_cache_key(self, token):
+        """
+        redis cache key
+        """
         return "user:minapp:{}:token:{}".format(
             self.platform, token), 60 * 60 * 24
 
     def get_glb_cache_key(self):
         return "glb:minapp:{}:token".format(self.platform), 60 * 60 * 2
 
-    @property
-    def platform(self):
-        raise NotImplementedError
-
     def get_info_by_token(self, token: str) -> (bool, dict):
+        """
+        query mini app info by token
+        """
         raise NotImplementedError
 
     def cache_info(self, token: str, info: dict):
+        """
+        cache info to redis
+        """
         client = RedisClient().get_conn()
         key, ts = self.user_cache_key
         key = key.format(self.platform, token)
         client.set(key, json.dumps(info), ts)
 
     def clear_cache_info(self, token: str):
+        """
+        delete cache
+        """
         client = RedisClient().get_conn()
         key, ts = self.user_cache_key
 
@@ -55,6 +98,9 @@ class MinAppMixin():
         return json.loads(info)
 
     def set_access_token(self, token):
+        """
+        Set App Glb token
+        """
         glb_key, ts = self.get_glb_cache_key()
         client = RedisClient().get_conn()
         client.set(glb_key, token, ts)
@@ -76,7 +122,7 @@ class MinAppMixin():
             return token
 
 
-class WXMinApp(MinAppMixin):
+class WXMiniApp(MiniAppMixin):
     '''
     wechat mini app
     ---
@@ -87,19 +133,25 @@ class WXMinApp(MinAppMixin):
             platform = "test_app"
 
             def _get_appinfo(self):
-                return (settings.WX_WEIGHT_APPID,
-                        settings.WX_WEIGHT_SECRET)
+                return (settings.WX_APPID,
+                        settings.WX_SECRET)
     '''
 
     domain = "https://api.weixin.qq.com"
 
     def _get_appinfo(self):
+        """
+        def _get_appinfo(self):
+            return (settings.WX_APPID,
+                    settings.WX_SECRET)
+    '''
+        """
         raise NotImplementedError
 
     def send_template_msg(self, openid, form_id, template_id, data, page=''
                           ) -> bool:
         """
-        推送模版消息
+        send template msg
         """
         access_token = self.get_access_token()
         url = "{}/cgi-bin/message/wxopen/template/send".format(self.domain)
@@ -181,12 +233,18 @@ class WXMinApp(MinAppMixin):
         return False, None
 
     def refresh_token(self):
+        """
+        Refresh Wechat app token, mini app global unique
+        if development, get by production
+        """
         appid, secret = self._get_appinfo()
         if not settings.PRODUCTION:
             return None
+
         url = "{}/cgi-bin/token".format(self.domain)
         url = "{}?grant_type=client_credential&appid={}&secret={}"\
             .format(url, appid, secret)
+
         try:
             response = requests.get(url, timeout=15)
             json_data = response.json()
@@ -196,6 +254,7 @@ class WXMinApp(MinAppMixin):
         except Exception:
             logger.exception("{} get_access_token".format(self.platform))
             return None
+
         if not json_data.get('errcode'):
             access_token = json_data['access_token']
             return access_token
@@ -208,10 +267,10 @@ class WXMinApp(MinAppMixin):
         """
         Get mini app qrcode by params
         ----
-        page: page/index/index
-        params: {'id': 101}
-        filename: 'test'
-        width: default 430, min 280, max 1280
+            page: page/index/index
+            params: {'id': 101}
+            filename: 'test'
+            width: default 430, min 280, max 1280
         """
         url = "{}/wxa/getwxacodeunlimit".format(self.domain)
         params = urllib.parse.urlencode(params)

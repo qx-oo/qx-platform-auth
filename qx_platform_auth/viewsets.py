@@ -4,15 +4,44 @@ from rest_framework.permissions import (
 )
 from qx_base.qx_user.viewsets import UserViewSet as BaseUserViewSet
 from qx_base.qx_user.viewsets import UserPermission as BaseUserPermission
-from qx_base.qx_rest.response import ApiResponse
+from qx_base.qx_rest.response import ApiResponse, ApiNotFoundResponse
 from qx_base.qx_rest import mixins
+from .settings import platform_auth_settings
 from .serializers import (
     PlatformSigninSerializer,
     PlatformSignupSerializer,
     BindPlatformSerializer,
     PlatformSerializer,
     platform_model,
+    miniapp_map,
 )
+
+
+def miniapp_token(request):
+    """
+    Development query miniapp token by production
+    ---
+        key: settings key
+        secret: settings secret
+    """
+    key = request.POST.get('key', '')
+    secret = request.GET.get('secret', '')
+    if platform_auth_settings.MINIAPP_TOKEN_KEY != key or \
+            platform_auth_settings.MINIAPP_TOKEN_SECRET != secret:
+        return ApiNotFoundResponse()
+    try:
+        platform = int(request.GET.get('platform', ''))
+        cls = miniapp_map[platform]
+    except Exception:
+        return ApiNotFoundResponse()
+
+    token = cls().get_access_token()
+    if not token:
+        return ApiNotFoundResponse()
+    else:
+        return ApiResponse({
+            "access_token": token
+        })
 
 
 class UserPermission(BaseUserPermission):
