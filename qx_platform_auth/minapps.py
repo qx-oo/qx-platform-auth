@@ -1,25 +1,57 @@
+import base64
 import json
 import logging
 import requests
 import urllib
+from Crypto.Cipher import AES
 from django.conf import settings
 from qx_base.qx_core.storage import RedisClient
 
 logger = logging.getLogger(__name__)
 
 
-class MinAppMixin():
+class MiniAppDataDecrypt:
+    """
+    Decrypt mini app data
+    ---
+    decrypt_data = MiniAppDataDecrypt(appid, session_key).decrypt(data, iv)
+    """
+
+    def __init__(self, appid, session_key):
+        self.appid = appid
+        self.sessionKey = session_key
+
+    def decrypt(self, encrypted_data, iv):
+        # base64 decode
+        session_key = base64.b64decode(self.session_key)
+        encrypted_data = base64.b64decode(encrypted_data)
+        iv = base64.b64decode(iv)
+
+        cipher = AES.new(session_key, AES.MODE_CBC, iv)
+
+        decrypted = json.loads(self._unpad(cipher.decrypt(encrypted_data)))
+
+        if decrypted['watermark']['appid'] != self.appid:
+            raise Exception('Invalid Buffer')
+
+        return decrypted
+
+    def _unpad(self, s):
+        return s[:-ord(s[len(s)-1:])]
+
+
+class MiniAppMixin():
     """
     Mini App
     ---
     """
 
     def get_user_cache_key(self, token):
-        return "user:minapp:{}:token:{}".format(
+        return "user:miniapp:{}:token:{}".format(
             self.platform, token), 60 * 60 * 24
 
     def get_glb_cache_key(self):
-        return "glb:minapp:{}:token".format(self.platform), 60 * 60 * 2
+        return "glb:miniapp:{}:token".format(self.platform), 60 * 60 * 2
 
     @property
     def platform(self):
@@ -76,19 +108,19 @@ class MinAppMixin():
             return token
 
 
-class WXMinApp(MinAppMixin):
+class WXMiniApp(MiniAppMixin):
     '''
     wechat mini app
     ---
     example:
 
-        class WXWeightApp(WXAppApi):
+        class WXTestApp(WXMiniApp):
 
             platform = "test_app"
 
             def _get_appinfo(self):
-                return (settings.WX_WEIGHT_APPID,
-                        settings.WX_WEIGHT_SECRET)
+                return (settings.WX_TEST_APPID,
+                        settings.WX_TEST_SECRET)
     '''
 
     domain = "https://api.weixin.qq.com"

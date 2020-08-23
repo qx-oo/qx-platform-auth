@@ -177,5 +177,8 @@ QX_PLATFORM_AUTH_SETTINGS = {
         "APPLE_CLIENT_SECRET": '-----BEGIN PUBLIC KEY-----MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDdlatRjRjogo3WojgGHFHYLugdUWAY9iR3fy4arWNA1KoS8kVw33cJibXr8bvwUAUparCwlvdbH6dvEOfou0/gCFQsHUfQrSDv+MuSUMAe8jzKE4qW+jK+xQU9a03GUnKHkkle+Q0pX/g6jXZ7r1/xAK5Do2kQ+X5xK9cipRgEKwIDAQAB-----END PUBLIC KEY-----',  # noqa
         "APPLE_REDIRECT_URI": 'test',
     },
-    "PLATFORM_AUTH_MODEL": 'user.UserPlatform'
+    "PLATFORM_AUTH_MODEL": 'user.UserPlatform',
+    "MINIAPP_PLATFORM_MAP": {
+        "testapp": "qx_test.user.miniapps.WXTestApp",
+    }
 }

@@ -31,5 +31,21 @@ settings.py:
             "APPLE_CLIENT_SECRET": 'test',
             "APPLE_REDIRECT_URI": 'test',
         },
-        "PLATFORM_AUTH_MODEL": 'user.UserPlatform'
+        "PLATFORM_AUTH_MODEL": 'user.UserPlatform',
+        "MINIAPP_PLATFORM_MAP": {
+            "testapp": "qx_test.user.miniapps.WXTestApp",
+        }
     }
+
+mini app.py:
+
+    from qx_platform_auth.minapps import WXMiniApp
+
+    class WXTestApp(WXMiniApp):
+
+        platform = "testapp"
+
+        def _get_appinfo(self):
+            return ('appid_test',
+                    'appid_secret')
+

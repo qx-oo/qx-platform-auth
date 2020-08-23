@@ -1,3 +1,4 @@
+from django.utils.module_loading import import_string
 from qx_base.settings import get_settings
 
 
@@ -9,8 +10,16 @@ QX_PLATFORM_AUTH_SETTINGS = {
         "APPLE_CLIENT_SECRET": None,
         "APPLE_REDIRECT_URI": None,
     },
-    "PLATFORM_AUTH_MODEL": None
+    "PLATFORM_AUTH_MODEL": None,
+    "MINIAPP_PLATFORM_MAP": None,
 }
 
 platform_auth_settings = get_settings(
     'QX_PLATFORM_AUTH_SETTINGS', QX_PLATFORM_AUTH_SETTINGS)
+
+_platform_map = {}
+if platform_auth_settings.MINIAPP_PLATFORM_MAP:
+    for platform, cls in platform_auth_settings.MINIAPP_PLATFORM_MAP.items():
+        _platform_map[platform] = import_string(cls)
+
+platform_auth_settings.MINIAPP_PLATFORM_MAP = _platform_map
