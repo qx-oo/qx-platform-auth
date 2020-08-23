@@ -43,7 +43,7 @@ class TestUserViewSet:
         assert data['data']['token']
 
     @pytest.mark.django_db
-    def test_signup(self, rf, mocker, user_data_init):
+    def test_signup_platform(self, rf, mocker, user_data_init):
         url = '{}/user/signin-platform/'.format(self.url)
 
         req_data = {
@@ -58,6 +58,8 @@ class TestUserViewSet:
             url, data=req_data,
             content_type='application/json')
         response = self.viewset.as_view({'post': 'signin_platform'})(request)
+        data = json.loads(response.content)
+        assert data['data']['platform_code']
 
         url = '{}/user/signup-platform/'.format(self.url)
 
@@ -66,6 +68,7 @@ class TestUserViewSet:
             "mobile": '18866668000',
             "password": "12345678",
             'platform': 'wechat',
+            "platform_code": data['data']['platform_code'],
             "userinfo": {
                 "name": "test_user",
                 "age": 15,

@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.db import transaction
 from qx_base.qx_core.tools import DictInstance
-from qx_base.qx_user.tools import CodeMsg, generate_random_account
+from qx_base.qx_user.tools import CodeMsg
 from qx_base.qx_user.serializers import SignupSerializer
 from qx_base.qx_rest.exceptions import SerializerFieldError
 from .settings import platform_auth_settings
@@ -27,7 +27,7 @@ class PlatformSigninSerializer(serializers.Serializer):
         label="Is register", read_only=True)
     extra_info = serializers.JSONField(
         label="Extra Info(email, mobile...)", read_only=True)
-    code = serializers.CharField(
+    platform_code = serializers.CharField(
         label="Signup Code", read_only=True)
 
     def create(self, validated_data):
@@ -43,13 +43,14 @@ class PlatformSigninSerializer(serializers.Serializer):
             user = User.objects.filter(id=instance.user_id).first()
         if not user:
             is_send, code = CodeMsg(
-                validated_data['openid'], _type="signup").get_new_code()
+                validated_data['openid'],
+                _type="platform_signup").get_new_code()
             return DictInstance(
                 **validated_data, **{
                     "is_register": False,
                     "token": None,
                     "extra_info": ret,
-                    "code": code,
+                    "platform_code": code,
                 })
         else:
             token = user.get_new_token()
@@ -58,7 +59,7 @@ class PlatformSigninSerializer(serializers.Serializer):
                     "is_register": True,
                     "token": token,
                     "extra_info": ret,
-                    "code": None,
+                    "platform_code": None,
                 })
 
 
@@ -69,75 +70,37 @@ class PlatformSignupSerializer(SignupSerializer):
     platform = serializers.ChoiceField(
         label="Platform", choices=list(APP_PLATFORM_MAP.items()),
         write_only=True)
-
-    # def _check_user_exists(self, email, mobile, openid):
-    #     account = email or mobile or openid
-    #     if User.objects.filter(
-    #             Q(email=account) | Q(mobile=account) | Q(account=account)
-    #     ).exists():
-    #         if email:
-    #             raise SerializerFieldError(
-    #                 '用户已存在', field='email')
-    #         elif mobile:
-    #             raise SerializerFieldError(
-    #                 '用户已存在', field='mobile')
-    #         else:
-    #             raise SerializerFieldError(
-    #                 '用户已存在', field='openid')
+    platform_code = serializers.CharField(
+        label="Platform Signup Code", max_length=10,
+        write_only=True)
 
     def create(self, validated_data):
-        account = validated_data.pop('account', None)
-        mobile = validated_data.pop('mobile', None)
-        email = validated_data.pop('email', None)
-        code = validated_data.pop('code', None)
-        password = validated_data.pop('password', None)
-        userinfo = validated_data.pop('userinfo', None)
 
         openid = validated_data['openid']
         platform = validated_data['platform']
+        platform_code = validated_data['platform_code']
 
-        if not email and not mobile and not account:
-            raise serializers.ValidationError(
-                'email, mobile and account empty')
+        _code = CodeMsg(
+            openid, _type='platform_signup').get_code()
+        if platform_code != _code:
+            raise SerializerFieldError(
+                '验证码错误', field='code')
 
-        # self._check_user_exists(email, mobile, openid)
+        platform_ins = platform_model.objects.filter(
+            openid=openid,
+            platform=platform).first()
+        if not platform_ins:
+            raise SerializerFieldError('openid error', field=openid)
+        if platform_ins.user_id:
+            raise SerializerFieldError(
+                '已绑定用户', field='openid')
 
-        platform_ins = None
-        if openid:
-            platform_ins = platform_model.objects.filter(
-                openid=openid,
-                platform=platform).first()
-            if platform_ins.user_id:
-                raise SerializerFieldError(
-                    '已绑定用户', field='openid')
-            if not platform_ins:
-                raise SerializerFieldError(
-                    'openid error', field='openid')
-            object_id = openid
-        else:
-            object_id = email or mobile
-
-        user, field = User.query_user(account, email, mobile)
-        if user:
-            raise SerializerFieldError('用户已存在', field=field)
-
-        if code:
-            _code = CodeMsg(
-                object_id, _type='signup').get_code()
-            if code != _code:
-                raise SerializerFieldError(
-                    '验证码错误', field='code')
-
-        if not account:
-            account = generate_random_account()
-
-        # creaste user
         with transaction.atomic():
-            instance = self._create_user(
-                account, mobile, email, password, userinfo)
-            if platform_ins:
-                platform_ins.user_id = instance.id
-                platform_ins.save()
+            instance = super().create_user(validated_data)
+
+            platform_ins.user_id = instance.id
+            platform_ins.save()
+
         return instance
 
 
