@@ -63,3 +63,25 @@ mini app.py:
             return ('appid_test',
                     'appid_secret')
 
+models.py:
+
+    from qx_platform_auth.models import PlatformAuth, PlatformAuth_Meta
+
+    class UserPlatform(PlatformAuth):
+        """
+        User Platform
+        """
+
+        Meta = PlatformAuth_Meta
+
+urls.py:
+
+    from qx_platform_auth import viewsets
+
+    router = DefaultRouter()
+    router.register('user', viewsets.UserViewSet)
+    router.register('platform', viewsets.PlatformViewSet)
+
+    urlpatterns = [
+        path('', include(router.urls)),
+    ]
