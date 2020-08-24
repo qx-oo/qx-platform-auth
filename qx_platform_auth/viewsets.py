@@ -9,6 +9,7 @@ from qx_base.qx_rest import mixins
 from .settings import platform_auth_settings
 from .serializers import (
     PlatformSigninSerializer,
+    MiniappSigninSerializer,
     PlatformSignupSerializer,
     BindPlatformSerializer,
     PlatformSerializer,
@@ -46,7 +47,9 @@ def miniapp_token(request):
 
 class UserPermission(BaseUserPermission):
     def has_permission(self, request, view):
-        if view.action in ['signin_platform', 'signup_platform']:
+        if view.action in [
+                'signin_platform', 'signup_platform',
+                'signin_miniapp']:
             return AllowAny().has_permission(request, view)
         return super().has_permission(request, view)
 
@@ -60,8 +63,13 @@ class UserViewSet(BaseUserViewSet):
 
         三方平台登录
 
+    signin_miniapp:
+        小程序登录
+
+        小程序登录
+
     signup_platform:
-        三方平台注册
+        三方平台注册(包含小程序)
 
         三方平台注册
     """.format(BaseUserViewSet.__doc__)
@@ -73,6 +81,8 @@ class UserViewSet(BaseUserViewSet):
     def get_serializer_class(self):
         if self.action == 'signin_platform':
             return PlatformSigninSerializer
+        elif self.action == 'signin_miniapp':
+            return MiniappSigninSerializer
         elif self.action == 'signup_platform':
             return PlatformSignupSerializer
         return super().get_serializer_class()
@@ -80,6 +90,11 @@ class UserViewSet(BaseUserViewSet):
     @decorators.action(methods=['post'], url_path='signin-platform',
                        detail=False)
     def signin_platform(self, request, *args, **kwargs):
+        return ApiResponse(data=self._create(request, *args, **kwargs))
+
+    @decorators.action(methods=['post'], url_path='signin-miniapp',
+                       detail=False)
+    def signin_miniapp(self, request, *args, **kwargs):
         return ApiResponse(data=self._create(request, *args, **kwargs))
 
     @decorators.action(methods=['post'], url_path='signup-platform',

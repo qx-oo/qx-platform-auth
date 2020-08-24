@@ -6,7 +6,7 @@ from .settings import platform_auth_settings
 logger = logging.getLogger(__name__)
 
 
-miniapp_map = platform_auth_settings.MINIAPP_AUTH
+miniapp_map = platform_auth_settings.MINIAPP_PLATFORM_MAP
 
 
 class RefreshMiniAppTokenTask():
