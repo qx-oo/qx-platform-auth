@@ -6,7 +6,7 @@ from .settings import platform_auth_settings
 logger = logging.getLogger(__name__)
 
 
-miniapp_map = platform_auth_settings.MINIAPP_PLATFORM_MAP
+MINIAPP_PLATFORM_MAP = platform_auth_settings.MINIAPP_PLATFORM_MAP
 
 
 class RefreshMiniAppTokenTask():
@@ -27,7 +27,7 @@ class RefreshMiniAppTokenTask():
         return token
 
     def run(self):
-        for platform, cls in miniapp_map.items():
+        for platform, cls in MINIAPP_PLATFORM_MAP.items():
             try:
                 run_app = cls()
                 if settings.PRODUCTION:

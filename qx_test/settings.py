@@ -162,6 +162,8 @@ AUTH_USER_MODEL = 'user.User'
 
 JWT_TOKEN_KEYWORD = 'token'
 
+PRODUCTION = True
+
 QX_BASE_SETTINGS = QX_BASE_SETTINGS = {
     'SEND_MOBILE_MSG_CLASS': 'qx_test.msg.TestMsg',
     'SEND_EMAIL_MSG_CLASS': 'qx_test.msg.TestMsg',
@@ -178,6 +180,9 @@ QX_PLATFORM_AUTH_SETTINGS = {
         "APPLE_REDIRECT_URI": 'test',
     },
     "PLATFORM_AUTH_MODEL": 'user.UserPlatform',
+    "MINIAPP_TOKEN_KEY": "test_key",
+    "MINIAPP_TOKEN_SECRET": "test_secret",
+    "MINIAPP_TOKEN_PROD_URL": "https://127.0.0.1:8000/user/miniapp/accesstoken/",  # noqa
     "MINIAPP_PLATFORM_MAP": {
         "testapp": "qx_test.user.miniapps.WXTestApp",
     }

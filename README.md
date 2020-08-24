@@ -10,7 +10,7 @@ my django project thirdparty platform auth
 
 depends:
 
-    qx-base >= 1.0.7
+    qx-base >= 1.0.8
 
 settings.py:
 
@@ -23,6 +23,8 @@ settings.py:
         ...
     ]
 
+    PRODUCTION = True
+
     QX_PLATFORM_AUTH_SETTINGS = {
         "APPLE_AUTH": {
             "APPLE_KEY_ID": 'test',
@@ -32,14 +34,26 @@ settings.py:
             "APPLE_REDIRECT_URI": 'test',
         },
         "PLATFORM_AUTH_MODEL": 'user.UserPlatform',
+        "MINIAPP_TOKEN_KEY": "test_key",
+        "MINIAPP_TOKEN_SECRET": "test_secret",
+        "MINIAPP_TOKEN_PROD_URL": "https://127.0.0.1:8000/user/miniapp/accesstoken/",
         "MINIAPP_PLATFORM_MAP": {
             "testapp": "qx_test.user.miniapps.WXTestApp",
         }
     }
 
+    CELERY_BEAT_SCHEDULE = {
+        ...
+        'RefreshAccessTokenTask': {
+            'task': 'qx_platform_auth.tasks.RefreshMiniAppTokenTask',
+            'schedule': access_token_crontab,
+        },
+        ...
+    }
+
 mini app.py:
 
-    from qx_platform_auth.minapps import WXMiniApp
+    from qx_platform_auth.miniapps import WXMiniApp
 
     class WXTestApp(WXMiniApp):
 

@@ -9,7 +9,7 @@ from qx_base.qx_user.serializers import SignupSerializer
 from qx_base.qx_rest.exceptions import SerializerFieldError
 from .settings import platform_auth_settings
 from .socialapps import APP_PLATFORM_MAP, AppPlatform
-from .minapps import MiniAppDataDecrypt
+from .miniapps import MiniAppDataDecrypt
 
 logger = logging.getLogger(__name__)
 

@@ -14,4 +14,5 @@ urlpatterns_api = [
 
 urlpatterns = [
     path('api/tests/', include(urlpatterns_api)),
+    path('miniapp/accesstoken/', viewsets.miniapp_token),
 ]

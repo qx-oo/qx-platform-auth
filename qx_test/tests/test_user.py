@@ -1,6 +1,10 @@
 import pytest
 import json
-from qx_platform_auth.viewsets import UserViewSet, PlatformViewSet
+from qx_platform_auth.viewsets import (
+    UserViewSet, PlatformViewSet, miniapp_token
+
+)
+from qx_platform_auth.settings import platform_auth_settings
 from qx_base.qx_core.tools import DictInstance
 from qx_test.user.models import User, UserPlatform
 
@@ -174,3 +178,29 @@ class TestPlatformViewSet:
         response = self.viewset.as_view({'get': 'list'})(request)
         data = json.loads(response.content)
         assert len(data['data']) == 0
+
+
+class TestMiniapp_token():
+
+    def test_miniapp_token(self, rf, mocker):
+        url = '/api/tests/user/miniapp/accesstoken/'
+
+        req_data = {
+            'key': platform_auth_settings.MINIAPP_TOKEN_KEY,
+            'secret': platform_auth_settings.MINIAPP_TOKEN_SECRET,
+            'platform': 'testapp',
+        }
+
+        class mocker_client:
+            def get(*args, **kwargs):
+                return 'test_token'
+
+        mocker.patch(
+            "qx_platform_auth.miniapps.RedisClient.get_conn",
+            return_value=mocker_client)
+        request = rf.post(
+            url, data=req_data,
+            content_type='application/json')
+        response = miniapp_token(request)
+        data = json.loads(response.content)
+        assert data['data']['access_token'] == 'test_token'

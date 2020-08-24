@@ -1,4 +1,4 @@
-from qx_platform_auth.minapps import WXMiniApp
+from qx_platform_auth.miniapps import WXMiniApp
 
 
 class WXTestApp(WXMiniApp):

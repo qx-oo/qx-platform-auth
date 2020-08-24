@@ -1,3 +1,5 @@
+import json
+from django.conf import settings
 from rest_framework import viewsets, decorators
 from rest_framework.permissions import (
     AllowAny, IsAuthenticated,
@@ -14,7 +16,7 @@ from .serializers import (
     BindPlatformSerializer,
     PlatformSerializer,
     platform_model,
-    miniapp_map,
+    MINIAPP_PLATFORM_MAP,
 )
 
 
@@ -25,14 +27,25 @@ def miniapp_token(request):
         key: settings key
         secret: settings secret
     """
-    key = request.POST.get('key', '')
-    secret = request.GET.get('secret', '')
+    if not settings.PRODUCTION:
+        raise ApiNotFoundResponse()
+    if request.method == 'GET':
+        req_data = request.GET
+    else:
+        try:
+            req_data = json.loads(request.body)
+        except Exception:
+            raise ApiNotFoundResponse()
+
+    key = req_data.get('key', '')
+    secret = req_data.get('secret', '')
+
     if platform_auth_settings.MINIAPP_TOKEN_KEY != key or \
             platform_auth_settings.MINIAPP_TOKEN_SECRET != secret:
         return ApiNotFoundResponse()
     try:
-        platform = int(request.GET.get('platform', ''))
-        cls = miniapp_map[platform]
+        platform = req_data.get('platform', '')
+        cls = MINIAPP_PLATFORM_MAP[platform]
     except Exception:
         return ApiNotFoundResponse()
 
