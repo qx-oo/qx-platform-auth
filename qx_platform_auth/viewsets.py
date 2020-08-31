@@ -69,7 +69,6 @@ class UserPermission(BaseUserPermission):
 
 class UserViewSet(BaseUserViewSet):
     """
-    {}
 
     signin_platform:
         三方平台登录
@@ -85,7 +84,8 @@ class UserViewSet(BaseUserViewSet):
         三方平台注册(包含小程序)
 
         三方平台注册
-    """.format(BaseUserViewSet.__doc__)
+    """
+    __doc__ = BaseUserViewSet.__doc__ + __doc__
 
     permission_classes = (
         UserPermission,
