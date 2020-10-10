@@ -2,11 +2,11 @@ import json
 from django.conf import settings
 from rest_framework import viewsets, decorators
 from rest_framework.permissions import (
-    AllowAny, IsAuthenticated,
+    IsAuthenticated,
 )
 from qx_base.qx_user.viewsets import UserViewSet as BaseUserViewSet
-from qx_base.qx_user.viewsets import UserPermission as BaseUserPermission
 from qx_base.qx_rest.response import ApiResponse, ApiNotFoundResponse
+from qx_base.qx_rest.permissions import action_authenticated
 from qx_base.qx_rest import mixins
 from .settings import platform_auth_settings
 from .serializers import (
@@ -58,15 +58,6 @@ def miniapp_token(request):
         })
 
 
-class UserPermission(BaseUserPermission):
-    def has_permission(self, request, view):
-        if view.action in [
-                'signin_platform', 'signup_platform',
-                'signin_miniapp']:
-            return AllowAny().has_permission(request, view)
-        return super().has_permission(request, view)
-
-
 class UserViewSet(BaseUserViewSet):
     """
 
@@ -88,7 +79,10 @@ class UserViewSet(BaseUserViewSet):
     __doc__ = BaseUserViewSet.__doc__ + __doc__
 
     permission_classes = (
-        UserPermission,
+        action_authenticated([
+            'signin', 'signup', 'send_code', 'account_exists',
+            'signin_platform', 'signup_platform',
+            'signin_miniapp']),
     )
 
     def get_serializer_class(self):

@@ -10,7 +10,7 @@ my django project thirdparty platform auth
 
 depends:
 
-    qx-base >= 1.0.8
+    qx-base >= 1.0.10
 
 settings.py:
 
