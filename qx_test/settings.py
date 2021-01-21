@@ -164,7 +164,7 @@ JWT_TOKEN_KEYWORD = 'token'
 
 PRODUCTION = True
 
-QX_BASE_SETTINGS = QX_BASE_SETTINGS = {
+QX_BASE_SETTINGS = {
     'SEND_MOBILE_MSG_CLASS': 'qx_test.msg.TestMsg',
     'SEND_EMAIL_MSG_CLASS': 'qx_test.msg.TestMsg',
     'USERINFO_MODEL': "user.UserInfo",
